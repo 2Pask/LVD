@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="LVD outils" />
+  <title>LVD outils</title>
+  <style>
+    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:#111; background:#f4f4f6; }
+    body { margin:0; padding:16px; max-width:720px; margin-inline:auto; }
+    h1 { font-size:24px; margin:8px 0 4px; }
+    .sub { color:#555; margin-bottom:16px; }
+    .card { background:white; border-radius:16px; padding:14px; margin:12px 0; box-shadow:0 1px 6px rgba(0,0,0,.08); }
+    label { display:block; font-weight:650; margin:12px 0 6px; }
+    input, select, button { width:100%; box-sizing:border-box; font-size:18px; border-radius:12px; border:1px solid #ccc; padding:12px; background:white; }
+    button { border:0; background:#111; color:white; font-weight:700; margin-top:14px; }
+    .result { font-size:18px; line-height:1.45; }
+    .big { font-size:22px; font-weight:800; margin:8px 0; }
+    .ok { color:#147a2e; font-weight:800; }
+    .warn { color:#a05a00; font-weight:800; }
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th, td { border-bottom:1px solid #eee; padding:8px 4px; text-align:left; }
+    th:last-child, td:last-child { text-align:right; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#eee; margin:2px; }
+    .small { font-size:13px; color:#666; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap:anywhere; }
+  </style>
+</head>
+<body>
+  <h1>LVD outils</h1>
+  <div class="sub">Décomposition de longueur pour montage poinçons / vés</div>
+
+  <div class="card">
+    <label for="tool">Outil</label>
+    <select id="tool">
+      <option value="J15">Poinçon J15 — 12×510 + 2 jeux couteaux 550</option>
+      <option value="D15">Poinçon D15 — 12×510 + 1 jeu couteaux 550</option>
+      <option value="V12">Vé 12 — 12×510 + 1 jeu vés 550</option>
+      <option value="V16">Vé 16 — 12×510 + 1 jeu vés 550</option>
+      <option value="V24">Vé 24 — 12×510 + 1 jeu vés 550</option>
+    </select>
+
+    <label for="length">Longueur voulue en mm</label>
+    <input id="length" type="number" inputmode="numeric" value="3860" min="1" step="1" />
+
+    <label for="offset">Retrait volontaire</label>
+    <select id="offset">
+      <option value="0">Exact</option>
+      <option value="5">5 mm de moins</option>
+      <option value="10">10 mm de moins</option>
+      <option value="15">15 mm de moins</option>
+    </select>
+
+    <label for="horns">Bigornes</label>
+    <select id="horns">
+      <option value="normal">Utiliser si utile</option>
+      <option value="prefer">Priorité bigornes</option>
+      <option value="avoid">Éviter bigornes</option>
+    </select>
+
+    <button onclick="solve()">Calculer</button>
+  </div>
+
+  <div id="out" class="card result"></div>
+
+  <div class="card small">
+    <b>Inventaire intégré</b><br>
+    Couteaux 550 : 20+20+25+25+30+35+40+45+120+75G+75D<br>
+    Vés 550 : 20+20+25+30+35+40+40+45+75+75+120<br><br>
+    Classement : maximum de 510, puis moins de morceaux, puis préférence bigornes.
+  </div>
+
+<script>
+const inventories = {
+  J15: { full510: 12, kits: 2, type: 'knife' },
+  D15: { full510: 12, kits: 1, type: 'knife' },
+  V12: { full510: 12, kits: 1, type: 'vee' },
+  V16: { full510: 12, kits: 1, type: 'vee' },
+  V24: { full510: 12, kits: 1, type: 'vee' }
+};
+
+const kitDefs = {
+  knife: [
+    {name:'20', len:20, horn:false}, {name:'20', len:20, horn:false},
+    {name:'25', len:25, horn:false}, {name:'25', len:25, horn:false},
+    {name:'30', len:30, horn:false}, {name:'35', len:35, horn:false},
+    {name:'40', len:40, horn:false}, {name:'45', len:45, horn:false},
+    {name:'120', len:120, horn:false},
+    {name:'75 bigorne G', len:75, horn:true}, {name:'75 bigorne D', len:75, horn:true}
+  ],
+  vee: [
+    {name:'20', len:20, horn:false}, {name:'20', len:20, horn:false},
+    {name:'25', len:25, horn:false}, {name:'30', len:30, horn:false},
+    {name:'35', len:35, horn:false}, {name:'40', len:40, horn:false},
+    {name:'40', len:40, horn:false}, {name:'45', len:45, horn:false},
+    {name:'75', len:75, horn:false}, {name:'75', len:75, horn:false}, {name:'120', len:120, horn:false}
+  ]
+};
+
+function piecesFor(inv) {
+  let pieces = [];
+  for (let i=0; i<inv.full510; i++) pieces.push({name:'510', len:510, horn:false, full:true});
+  const base = kitDefs[inv.type];
+  for (let k=1; k<=inv.kits; k++) {
+    for (const p of base) pieces.push({...p, name:p.name + (inv.kits>1 ? ` #${k}` : ''), kit:k, full:false});
+  }
+  return pieces;
+}
+
+function comboForRemainder(pieces, rem, hornMode) {
+  // dynamic programming exact subset for fractional remainder, excluding 510 pieces
+  const fracs = pieces.filter(p => !p.full);
+  let dp = new Map();
+  dp.set(0, []);
+  for (const p of fracs) {
+    const current = Array.from(dp.entries());
+    for (const [sum, arr] of current) {
+      const ns = sum + p.len;
+      if (ns > rem) continue;
+      const cand = arr.concat([p]);
+      if (!dp.has(ns) || betterFrac(cand, dp.get(ns), hornMode)) dp.set(ns, cand);
+    }
+  }
+  return dp.get(rem) || null;
+}
+
+function hornCount(arr){ return arr.filter(p=>p.horn).length; }
+function betterFrac(a,b,mode){
+  if (!b) return true;
+  if (a.length !== b.length) return a.length < b.length;
+  const ha = hornCount(a), hb = hornCount(b);
+  if (mode === 'prefer' && ha !== hb) return ha > hb;
+  if (mode === 'avoid' && ha !== hb) return ha < hb;
+  // prefer larger chunks first
+  const sa = a.map(p=>p.len).sort((x,y)=>y-x).join(',');
+  const sb = b.map(p=>p.len).sort((x,y)=>y-x).join(',');
+  return sa > sb;
+}
+
+function summarize(arr) {
+  const m = new Map();
+  for (const p of arr) {
+    const key = p.name.replace(/ #\d+$/, '');
+    m.set(key, (m.get(key)||0) + 1);
+  }
+  return Array.from(m.entries()).sort((a,b)=> {
+    const la = parseInt(a[0],10)||0, lb=parseInt(b[0],10)||0;
+    return lb-la || a[0].localeCompare(b[0]);
+  });
+}
+
+function solve() {
+  const tool = document.getElementById('tool').value;
+  const wanted = parseInt(document.getElementById('length').value,10);
+  const offset = parseInt(document.getElementById('offset').value,10);
+  const hornMode = document.getElementById('horns').value;
+  const target = wanted - offset;
+  const out = document.getElementById('out');
+  if (!Number.isFinite(wanted) || wanted <= 0 || target <= 0) {
+    out.innerHTML = '<span class="warn">Entre une longueur valide.</span>';
+    return;
+  }
+  const inv = inventories[tool];
+  const max = inv.full510*510 + inv.kits*550;
+  if (target > max) {
+    out.innerHTML = `<span class="warn">Impossible : cible ${target} mm, stock maxi ${max} mm.</span>`;
+    return;
+  }
+  const pieces = piecesFor(inv);
+  let best = null;
+  // try maximum 510 first, then decreasing
+  for (let n510 = Math.min(inv.full510, Math.floor(target/510)); n510 >= 0; n510--) {
+    const rem = target - n510*510;
+    const frac = comboForRemainder(pieces, rem, hornMode);
+    if (frac) {
+      best = {n510, frac, total:target};
+      break;
+    }
+  }
+  if (!best) {
+    out.innerHTML = `<span class="warn">Pas de combinaison exacte pour ${target} mm.</span><br><span class="small">Essaie exact / -5 / -10 / -15, ou une autre longueur.</span>`;
+    return;
+  }
+  const arr = [];
+  for (let i=0; i<best.n510; i++) arr.push({name:'510', len:510, full:true, horn:false});
+  arr.push(...best.frac);
+  const rows = summarize(arr).map(([name, q]) => {
+    const len = parseInt(name,10) || (name.includes('75') ? 75 : 0);
+    return `<tr><td>${name}</td><td>${q}</td><td>${len*q}</td></tr>`;
+  }).join('');
+  const expression = summarize(arr).map(([name,q]) => q>1 ? `${q}×${name}` : name).join(' + ');
+  const modeLabel = offset === 0 ? 'exact' : `${offset} mm de moins`;
+  out.innerHTML = `
+    <div class="ok">Solution trouvée</div>
+    <div class="big">${tool} — ${target} mm</div>
+    <div><span class="pill">Demandé : ${wanted} mm</span><span class="pill">Mode : ${modeLabel}</span></div>
+    <p class="mono">${expression} = ${target}</p>
+    <table><thead><tr><th>Morceau</th><th>Qté</th><th>Total mm</th></tr></thead><tbody>${rows}</tbody></table>
+  `;
+}
+solve();
+</script>
+</body>
+</html>
