@@ -1,205 +1,257 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="LVD outils" />
-  <title>LVD outils</title>
-  <style>
-    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:#111; background:#f4f4f6; }
-    body { margin:0; padding:16px; max-width:720px; margin-inline:auto; }
-    h1 { font-size:24px; margin:8px 0 4px; }
-    .sub { color:#555; margin-bottom:16px; }
-    .card { background:white; border-radius:16px; padding:14px; margin:12px 0; box-shadow:0 1px 6px rgba(0,0,0,.08); }
-    label { display:block; font-weight:650; margin:12px 0 6px; }
-    input, select, button { width:100%; box-sizing:border-box; font-size:18px; border-radius:12px; border:1px solid #ccc; padding:12px; background:white; }
-    button { border:0; background:#111; color:white; font-weight:700; margin-top:14px; }
-    .result { font-size:18px; line-height:1.45; }
-    .big { font-size:22px; font-weight:800; margin:8px 0; }
-    .ok { color:#147a2e; font-weight:800; }
-    .warn { color:#a05a00; font-weight:800; }
-    table { width:100%; border-collapse:collapse; margin-top:8px; }
-    th, td { border-bottom:1px solid #eee; padding:8px 4px; text-align:left; }
-    th:last-child, td:last-child { text-align:right; }
-    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#eee; margin:2px; }
-    .small { font-size:13px; color:#666; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap:anywhere; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LVD V6 - Bigornes par poste</title>
+<style>
+:root{font-size:18px}
+body{font-family:Arial,Helvetica,sans-serif;margin:12px;background:#f2f2f2;color:#111;line-height:1.35}
+h1{font-size:1.45rem;margin:0 0 10px}
+h2{font-size:1.15rem;margin:8px 0}
+.card{background:#fff;padding:12px;border-radius:14px;margin-bottom:10px;box-shadow:0 1px 5px rgba(0,0,0,.14)}
+.post-input{border:1px solid #bbb;border-radius:12px;padding:10px;margin-top:10px;background:#fafafa}
+label{display:block;font-weight:bold;margin-top:9px}
+input,select,button{width:100%;padding:10px;margin-top:4px;font-size:1.05rem;box-sizing:border-box;border-radius:8px;border:1px solid #999}
+button{font-weight:900;background:#111;color:#fff;border:0;margin-top:14px;font-size:1.25rem;padding:14px}
+.big{font-size:2.1rem;font-weight:900;text-align:center}
+.comp{font-size:1.85rem;font-weight:900;border:3px solid #111;border-radius:12px;padding:10px;margin-top:6px;word-break:break-word;background:white}
+.poste{border:2px solid #444;border-radius:12px;padding:10px;margin-top:10px;background:#fafafa}
+.poste-title{font-size:1.45rem;font-weight:900}
+.meta{font-size:1rem;color:#444;margin-top:4px}
+.pos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.box{border:1px solid #777;border-radius:10px;padding:8px;background:white}
+.boxlabel{font-size:.8rem;color:#555;text-transform:uppercase;font-weight:bold}
+.boxvalue{font-size:1.35rem;font-weight:900}
+.warn{font-size:1.15rem;color:#9a4b00;font-weight:bold}
+.small{font-size:.85rem;color:#555;margin-top:8px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+td,th{border:1px solid #999;padding:6px;text-align:center}
+@media(min-width:700px){body{max-width:860px;margin:14px auto}.pos{grid-template-columns:1fr 1fr 1fr 1fr}.comp{font-size:1.65rem}}
+</style>
 </head>
 <body>
-  <h1>LVD outils</h1>
-  <div class="sub">Décomposition de longueur pour montage poinçons / vés</div>
+<h1>LVD V6 - Bigornes par poste</h1>
 
-  <div class="card">
-    <label for="tool">Outil</label>
-    <select id="tool">
-      <option value="J15">Poinçon J15 — 12×510 + 2 jeux couteaux 550</option>
-      <option value="D15">Poinçon D15 — 12×510 + 1 jeu couteaux 550</option>
-      <option value="V12">Vé 12 — 12×510 + 1 jeu vés 550</option>
-      <option value="V16">Vé 16 — 12×510 + 1 jeu vés 550</option>
-      <option value="V24">Vé 24 — 12×510 + 1 jeu vés 550</option>
-    </select>
+<div class="card">
+<label for="tool">Type d'outil</label>
+<select id="tool">
+  <option value="J15">Poinçon J15</option>
+  <option value="D15">Poinçon D15</option>
+  <option value="V12">Vé 12</option>
+  <option value="V16">Vé 16</option>
+  <option value="V24">Vé 24</option>
+</select>
 
-    <label for="length">Longueur voulue en mm</label>
-    <input id="length" type="number" inputmode="numeric" value="3860" min="1" step="1" />
+<div class="post-input">
+<h2>Poste 1</h2>
+<label for="p1">Longueur poste 1 (mm)</label>
+<input id="p1" type="number" inputmode="numeric" value="2050">
+<label for="b1">Bigorne poste 1</label>
+<select id="b1">
+  <option value="none" selected>Aucune contrainte</option>
+  <option value="left">Imposer 75G</option>
+  <option value="right">Imposer 75D</option>
+  <option value="both">Imposer 75G + 75D</option>
+  <option value="avoid">Éviter les bigornes si possible</option>
+</select>
+</div>
 
-    <label for="offset">Retrait volontaire</label>
-    <select id="offset">
-      <option value="0">Exact</option>
-      <option value="5">5 mm de moins</option>
-      <option value="10">10 mm de moins</option>
-      <option value="15">15 mm de moins</option>
-    </select>
+<div class="post-input">
+<h2>Poste 2</h2>
+<label for="p2">Longueur poste 2 (mm)</label>
+<input id="p2" type="number" inputmode="numeric" value="0">
+<label for="j12">Jeu avant poste 2 (mm)</label>
+<input id="j12" type="number" inputmode="numeric" value="10">
+<label for="b2">Bigorne poste 2</label>
+<select id="b2">
+  <option value="none" selected>Aucune contrainte</option>
+  <option value="left">Imposer 75G</option>
+  <option value="right">Imposer 75D</option>
+  <option value="both">Imposer 75G + 75D</option>
+  <option value="avoid">Éviter les bigornes si possible</option>
+</select>
+</div>
 
-    <label for="horns">Bigornes</label>
-    <select id="horns">
-      <option value="normal">Utiliser si utile</option>
-      <option value="prefer">Priorité bigornes</option>
-      <option value="avoid">Éviter bigornes</option>
-    </select>
+<div class="post-input">
+<h2>Poste 3</h2>
+<label for="p3">Longueur poste 3 (mm)</label>
+<input id="p3" type="number" inputmode="numeric" value="0">
+<label for="j23">Jeu avant poste 3 (mm)</label>
+<input id="j23" type="number" inputmode="numeric" value="10">
+<label for="b3">Bigorne poste 3</label>
+<select id="b3">
+  <option value="none" selected>Aucune contrainte</option>
+  <option value="left">Imposer 75G</option>
+  <option value="right">Imposer 75D</option>
+  <option value="both">Imposer 75G + 75D</option>
+  <option value="avoid">Éviter les bigornes si possible</option>
+</select>
+</div>
 
-    <button onclick="solve()">Calculer</button>
-  </div>
+<label for="tol">Tolérance en moins par poste</label>
+<select id="tol">
+  <option value="0">Exact uniquement</option>
+  <option value="5">Jusqu'à -5 mm</option>
+  <option value="10" selected>Jusqu'à -10 mm</option>
+  <option value="15">Jusqu'à -15 mm</option>
+</select>
 
-  <div id="out" class="card result"></div>
+<label for="axisInput">Axe machine / axe Z (mm)</label>
+<input id="axisInput" type="number" inputmode="decimal" value="2525">
 
-  <div class="card small">
-    <b>Inventaire intégré</b><br>
-    Couteaux 550 : 20+20+25+25+30+35+40+45+120+75G+75D<br>
-    Vés 550 : 20+20+25+30+35+40+40+45+75+75+120<br><br>
-    Classement : maximum de 510, puis moins de morceaux, puis préférence bigornes.
-  </div>
+<button onclick="calc()">CALCULER</button>
+</div>
+
+<div class="card" id="out">Entre les postes puis appuie sur CALCULER.</div>
 
 <script>
-const inventories = {
-  J15: { full510: 12, kits: 2, type: 'knife' },
-  D15: { full510: 12, kits: 1, type: 'knife' },
-  V12: { full510: 12, kits: 1, type: 'vee' },
-  V16: { full510: 12, kits: 1, type: 'vee' },
-  V24: { full510: 12, kits: 1, type: 'vee' }
+const stockDefs = {
+  J15: { full510: 12, games: 2, kind: "punch" },
+  D15: { full510: 12, games: 1, kind: "punch" },
+  V12: { full510: 12, games: 1, kind: "vee" },
+  V16: { full510: 12, games: 1, kind: "vee" },
+  V24: { full510: 12, games: 1, kind: "vee" }
 };
+const punchSet = [
+  {len:120, name:"120", big:null},{len:75, name:"75G", big:"G"},{len:75, name:"75D", big:"D"},
+  {len:45, name:"45", big:null},{len:40, name:"40", big:null},{len:35, name:"35", big:null},
+  {len:30, name:"30", big:null},{len:25, name:"25", big:null},{len:25, name:"25", big:null},
+  {len:20, name:"20", big:null},{len:20, name:"20", big:null}
+];
+const veeSet = [
+  {len:120, name:"120", big:null},{len:75, name:"75G", big:"G"},{len:75, name:"75D", big:"D"},
+  {len:45, name:"45", big:null},{len:40, name:"40", big:null},{len:40, name:"40", big:null},
+  {len:35, name:"35", big:null},{len:30, name:"30", big:null},{len:25, name:"25", big:null},
+  {len:20, name:"20", big:null},{len:20, name:"20", big:null}
+];
 
-const kitDefs = {
-  knife: [
-    {name:'20', len:20, horn:false}, {name:'20', len:20, horn:false},
-    {name:'25', len:25, horn:false}, {name:'25', len:25, horn:false},
-    {name:'30', len:30, horn:false}, {name:'35', len:35, horn:false},
-    {name:'40', len:40, horn:false}, {name:'45', len:45, horn:false},
-    {name:'120', len:120, horn:false},
-    {name:'75 bigorne G', len:75, horn:true}, {name:'75 bigorne D', len:75, horn:true}
-  ],
-  vee: [
-    {name:'20', len:20, horn:false}, {name:'20', len:20, horn:false},
-    {name:'25', len:25, horn:false}, {name:'30', len:30, horn:false},
-    {name:'35', len:35, horn:false}, {name:'40', len:40, horn:false},
-    {name:'40', len:40, horn:false}, {name:'45', len:45, horn:false},
-    {name:'75', len:75, horn:false}, {name:'75', len:75, horn:false}, {name:'120', len:120, horn:false}
-  ]
-};
-
-function piecesFor(inv) {
-  let pieces = [];
-  for (let i=0; i<inv.full510; i++) pieces.push({name:'510', len:510, horn:false, full:true});
-  const base = kitDefs[inv.type];
-  for (let k=1; k<=inv.kits; k++) {
-    for (const p of base) pieces.push({...p, name:p.name + (inv.kits>1 ? ` #${k}` : ''), kit:k, full:false});
-  }
-  return pieces;
+function makeStock(tool){
+  const def=stockDefs[tool], base=def.kind==="vee"?veeSet:punchSet, counts={"510":def.full510};
+  for(let g=0;g<def.games;g++) for(const p of base) counts[p.name]=(counts[p.name]||0)+1;
+  return counts;
 }
-
-function comboForRemainder(pieces, rem, hornMode) {
-  // dynamic programming exact subset for fractional remainder, excluding 510 pieces
-  const fracs = pieces.filter(p => !p.full);
-  let dp = new Map();
-  dp.set(0, []);
-  for (const p of fracs) {
-    const current = Array.from(dp.entries());
-    for (const [sum, arr] of current) {
-      const ns = sum + p.len;
-      if (ns > rem) continue;
-      const cand = arr.concat([p]);
-      if (!dp.has(ns) || betterFrac(cand, dp.get(ns), hornMode)) dp.set(ns, cand);
+function stockToPieces(counts){
+  const arr=[];
+  for(const name in counts){
+    if(name==="510") continue;
+    const len=parseInt(name.replace("G","").replace("D",""));
+    const big=name.includes("G")?"G":(name.includes("D")?"D":null);
+    for(let i=0;i<counts[name];i++) arr.push({len,name,big});
+  }
+  return arr;
+}
+function countBig(list, side){return list.filter(p=>p.big===side).length;}
+function respectsBigorne(list, mode){
+  const g=countBig(list,"G"), d=countBig(list,"D");
+  if(mode==="left") return g>=1;
+  if(mode==="right") return d>=1;
+  if(mode==="both") return g>=1 && d>=1;
+  return true;
+}
+function canUse(stock, sol){
+  if((stock["510"]||0)<sol.n510) return false;
+  const need={};
+  for(const p of sol.list) need[p.name]=(need[p.name]||0)+1;
+  for(const k in need) if((stock[k]||0)<need[k]) return false;
+  return true;
+}
+function consume(stock, sol){
+  stock["510"]-=sol.n510;
+  for(const p of sol.list) stock[p.name]-=1;
+}
+function findBestForPost(target,tolerance,stock,bigorneMode){
+  const pieces=stockToPieces(stock);
+  let combos=[{sum:0,list:[]}];
+  for(const p of pieces){
+    const snap=combos.slice();
+    for(const c of snap) combos.push({sum:c.sum+p.len,list:c.list.concat([p])});
+  }
+  let best=null;
+  const max510=Math.min(stock["510"]||0,Math.floor(target/510));
+  for(let n510=max510;n510>=0;n510--){
+    const base=n510*510;
+    for(const c of combos){
+      if(!respectsBigorne(c.list,bigorneMode)) continue;
+      const total=base+c.sum, diff=target-total;
+      if(diff<0||diff>tolerance) continue;
+      const bigCount=c.list.filter(p=>p.big).length;
+      const avoidPenalty=bigorneMode==="avoid"?bigCount*5000:0;
+      const score=diff*100000-n510*1000+c.list.length*10+avoidPenalty;
+      const sol={score,total,diff,n510,list:c.list.slice(),mode:bigorneMode};
+      if(!canUse(stock,sol)) continue;
+      if(best===null||score<best.score) best=sol;
     }
   }
-  return dp.get(rem) || null;
+  return best;
 }
-
-function hornCount(arr){ return arr.filter(p=>p.horn).length; }
-function betterFrac(a,b,mode){
-  if (!b) return true;
-  if (a.length !== b.length) return a.length < b.length;
-  const ha = hornCount(a), hb = hornCount(b);
-  if (mode === 'prefer' && ha !== hb) return ha > hb;
-  if (mode === 'avoid' && ha !== hb) return ha < hb;
-  // prefer larger chunks first
-  const sa = a.map(p=>p.len).sort((x,y)=>y-x).join(',');
-  const sb = b.map(p=>p.len).sort((x,y)=>y-x).join(',');
-  return sa > sb;
+function formatComp(sol){
+  const parts=[];
+  if(sol.n510>0) parts.push(sol.n510+" × 510");
+  if(sol.list.length>0) parts.push(sol.list.map(p=>p.name).join(" + "));
+  return parts.join(" + ");
 }
-
-function summarize(arr) {
-  const m = new Map();
-  for (const p of arr) {
-    const key = p.name.replace(/ #\d+$/, '');
-    m.set(key, (m.get(key)||0) + 1);
-  }
-  return Array.from(m.entries()).sort((a,b)=> {
-    const la = parseInt(a[0],10)||0, lb=parseInt(b[0],10)||0;
-    return lb-la || a[0].localeCompare(b[0]);
-  });
+function modeLabel(m){
+  return {none:"aucune contrainte",left:"75G imposée",right:"75D imposée",both:"75G + 75D imposées",avoid:"bigornes évitées si possible"}[m]||m;
 }
+function calc(){
+  const tool=document.getElementById("tool").value;
+  const tolerance=Number(document.getElementById("tol").value);
+  const axis=Number(document.getElementById("axisInput").value);
+  const out=document.getElementById("out");
+  const raw=[
+    {idx:1, requested:Number(document.getElementById("p1").value)||0, gapBefore:0, mode:document.getElementById("b1").value},
+    {idx:2, requested:Number(document.getElementById("p2").value)||0, gapBefore:Number(document.getElementById("j12").value)||0, mode:document.getElementById("b2").value},
+    {idx:3, requested:Number(document.getElementById("p3").value)||0, gapBefore:Number(document.getElementById("j23").value)||0, mode:document.getElementById("b3").value}
+  ];
+  const active=raw.filter(p=>p.requested>0);
+  if(active.length===0){out.innerHTML="<span class='warn'>Entre au moins un poste.</span>";return;}
+  active[0].gapBefore=0;
 
-function solve() {
-  const tool = document.getElementById('tool').value;
-  const wanted = parseInt(document.getElementById('length').value,10);
-  const offset = parseInt(document.getElementById('offset').value,10);
-  const hornMode = document.getElementById('horns').value;
-  const target = wanted - offset;
-  const out = document.getElementById('out');
-  if (!Number.isFinite(wanted) || wanted <= 0 || target <= 0) {
-    out.innerHTML = '<span class="warn">Entre une longueur valide.</span>';
-    return;
-  }
-  const inv = inventories[tool];
-  const max = inv.full510*510 + inv.kits*550;
-  if (target > max) {
-    out.innerHTML = `<span class="warn">Impossible : cible ${target} mm, stock maxi ${max} mm.</span>`;
-    return;
-  }
-  const pieces = piecesFor(inv);
-  let best = null;
-  // try maximum 510 first, then decreasing
-  for (let n510 = Math.min(inv.full510, Math.floor(target/510)); n510 >= 0; n510--) {
-    const rem = target - n510*510;
-    const frac = comboForRemainder(pieces, rem, hornMode);
-    if (frac) {
-      best = {n510, frac, total:target};
-      break;
+  let stock=makeStock(tool), posts=[];
+  for(const p of active){
+    const sol=findBestForPost(p.requested,tolerance,stock,p.mode);
+    if(sol===null){
+      out.innerHTML="<span class='warn'>Aucune solution pour le poste "+p.idx+" avec sa contrainte bigorne : "+modeLabel(p.mode)+".</span>";
+      return;
     }
+    consume(stock,sol);
+    posts.push({...p,sol});
   }
-  if (!best) {
-    out.innerHTML = `<span class="warn">Pas de combinaison exacte pour ${target} mm.</span><br><span class="small">Essaie exact / -5 / -10 / -15, ou une autre longueur.</span>`;
-    return;
+
+  let total=0;
+  for(const p of posts) total+=p.gapBefore+p.sol.total;
+  const start=axis-total/2;
+  let cur=start, rows="", blocks="";
+
+  for(const p of posts){
+    cur+=p.gapBefore;
+    const deb=cur, fin=deb+p.sol.total;
+    cur=fin;
+    const diffText=p.sol.diff===0?"exact":"-"+p.sol.diff+" mm";
+    const g=countBig(p.sol.list,"G"), d=countBig(p.sol.list,"D");
+    rows+="<tr><td>Poste "+p.idx+"</td><td>"+deb.toFixed(1)+"</td><td>"+fin.toFixed(1)+"</td><td>"+p.sol.total+" mm</td></tr>";
+    blocks+="<div class='poste'>"+
+      "<div class='poste-title'>Poste "+p.idx+" — "+p.sol.total+" mm ("+diffText+")</div>"+
+      "<div class='meta'>Demandé : "+p.requested+" mm / Bigorne : "+modeLabel(p.mode)+(p.gapBefore?" / jeu avant : "+p.gapBefore+" mm":"")+"</div>"+
+      "<div class='comp'>"+formatComp(p.sol)+"</div>"+
+      "<div class='small'>Bigornes utilisées : 75G × "+g+" / 75D × "+d+"</div>"+
+      "<div class='pos'>"+
+        "<div class='box'><div class='boxlabel'>Début poste</div><div class='boxvalue'>"+deb.toFixed(1)+"</div></div>"+
+        "<div class='box'><div class='boxlabel'>Fin poste</div><div class='boxvalue'>"+fin.toFixed(1)+"</div></div>"+
+        "<div class='box'><div class='boxlabel'>Longueur</div><div class='boxvalue'>"+p.sol.total+"</div></div>"+
+        "<div class='box'><div class='boxlabel'>Écart</div><div class='boxvalue'>"+diffText+"</div></div>"+
+      "</div></div>";
   }
-  const arr = [];
-  for (let i=0; i<best.n510; i++) arr.push({name:'510', len:510, full:true, horn:false});
-  arr.push(...best.frac);
-  const rows = summarize(arr).map(([name, q]) => {
-    const len = parseInt(name,10) || (name.includes('75') ? 75 : 0);
-    return `<tr><td>${name}</td><td>${q}</td><td>${len*q}</td></tr>`;
-  }).join('');
-  const expression = summarize(arr).map(([name,q]) => q>1 ? `${q}×${name}` : name).join(' + ');
-  const modeLabel = offset === 0 ? 'exact' : `${offset} mm de moins`;
-  out.innerHTML = `
-    <div class="ok">Solution trouvée</div>
-    <div class="big">${tool} — ${target} mm</div>
-    <div><span class="pill">Demandé : ${wanted} mm</span><span class="pill">Mode : ${modeLabel}</span></div>
-    <p class="mono">${expression} = ${target}</p>
-    <table><thead><tr><th>Morceau</th><th>Qté</th><th>Total mm</th></tr></thead><tbody>${rows}</tbody></table>
-  `;
+
+  let stockRest="";
+  for(const k of Object.keys(stock).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))) if(stock[k]>0) stockRest+=k+"×"+stock[k]+" ";
+
+  out.innerHTML="<div class='big'>Total montage : "+total+" mm</div>"+
+    "<div class='meta' style='text-align:center'>Départ gauche montage complet : <b>"+start.toFixed(1)+" mm</b> / fin : <b>"+(start+total).toFixed(1)+" mm</b></div>"+
+    blocks+"<h2>Récap positions</h2><table><tr><th>Zone</th><th>Début</th><th>Fin</th><th>Monté</th></tr>"+rows+"</table>"+
+    "<div class='small'>Stock restant : "+stockRest+"</div>";
 }
-solve();
 </script>
 </body>
 </html>
