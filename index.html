@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LVD V6 - Bigornes par poste</title>
+<title>LVD V7 rapide</title>
 <style>
 :root{font-size:18px}
 body{font-family:Arial,Helvetica,sans-serif;margin:12px;background:#f2f2f2;color:#111;line-height:1.35}
@@ -31,7 +31,7 @@ td,th{border:1px solid #999;padding:6px;text-align:center}
 </style>
 </head>
 <body>
-<h1>LVD V6 - Bigornes par poste</h1>
+<h1>LVD V7 rapide</h1>
 
 <div class="card">
 <label for="tool">Type d'outil</label>
@@ -113,6 +113,7 @@ const stockDefs = {
   V16: { full510: 12, games: 1, kind: "vee" },
   V24: { full510: 12, games: 1, kind: "vee" }
 };
+
 const punchSet = [
   {len:120, name:"120", big:null},{len:75, name:"75G", big:"G"},{len:75, name:"75D", big:"D"},
   {len:45, name:"45", big:null},{len:40, name:"40", big:null},{len:35, name:"35", big:null},
@@ -126,75 +127,130 @@ const veeSet = [
   {len:20, name:"20", big:null},{len:20, name:"20", big:null}
 ];
 
+const comboCache = {};
+
 function makeStock(tool){
   const def=stockDefs[tool], base=def.kind==="vee"?veeSet:punchSet, counts={"510":def.full510};
   for(let g=0;g<def.games;g++) for(const p of base) counts[p.name]=(counts[p.name]||0)+1;
   return counts;
 }
-function stockToPieces(counts){
+
+function stockKey(stock){
+  return Object.keys(stock).sort().map(k=>k+":"+stock[k]).join("|");
+}
+
+function pieceFromName(name){
+  const len=parseInt(name.replace("G","").replace("D",""));
+  const big=name.includes("G")?"G":(name.includes("D")?"D":null);
+  return {len,name,big};
+}
+
+function stockToPieces(stock){
   const arr=[];
-  for(const name in counts){
+  for(const name of Object.keys(stock).sort()){
     if(name==="510") continue;
-    const len=parseInt(name.replace("G","").replace("D",""));
-    const big=name.includes("G")?"G":(name.includes("D")?"D":null);
-    for(let i=0;i<counts[name];i++) arr.push({len,name,big});
+    for(let i=0;i<(stock[name]||0);i++) arr.push(pieceFromName(name));
   }
   return arr;
 }
-function countBig(list, side){return list.filter(p=>p.big===side).length;}
-function respectsBigorne(list, mode){
-  const g=countBig(list,"G"), d=countBig(list,"D");
-  if(mode==="left") return g>=1;
-  if(mode==="right") return d>=1;
-  if(mode==="both") return g>=1 && d>=1;
-  return true;
-}
-function canUse(stock, sol){
-  if((stock["510"]||0)<sol.n510) return false;
-  const need={};
-  for(const p of sol.list) need[p.name]=(need[p.name]||0)+1;
-  for(const k in need) if((stock[k]||0)<need[k]) return false;
-  return true;
-}
-function consume(stock, sol){
-  stock["510"]-=sol.n510;
-  for(const p of sol.list) stock[p.name]-=1;
-}
-function findBestForPost(target,tolerance,stock,bigorneMode){
+
+function comboListForStock(stock){
+  const key=stockKey(stock);
+  if(comboCache[key]) return comboCache[key];
+
   const pieces=stockToPieces(stock);
-  let combos=[{sum:0,list:[]}];
+  let combos=[{sum:0,list:[], names:{}, g:0, d:0, count:0}];
+
   for(const p of pieces){
     const snap=combos.slice();
-    for(const c of snap) combos.push({sum:c.sum+p.len,list:c.list.concat([p])});
+    for(const c of snap){
+      const names=Object.assign({}, c.names);
+      names[p.name]=(names[p.name]||0)+1;
+      combos.push({
+        sum:c.sum+p.len,
+        list:c.list.concat([p]),
+        names:names,
+        g:c.g+(p.big==="G"?1:0),
+        d:c.d+(p.big==="D"?1:0),
+        count:c.count+1
+      });
+    }
   }
+
+  // Garde seulement la meilleure combinaison par signature utile.
+  // Cela réduit fortement la recherche.
+  combos.sort((a,b)=>a.sum-b.sum || a.count-b.count);
+  comboCache[key]=combos;
+  return combos;
+}
+
+function respectsBigorneCombo(c, mode){
+  if(mode==="left") return c.g>=1;
+  if(mode==="right") return c.d>=1;
+  if(mode==="both") return c.g>=1 && c.d>=1;
+  return true;
+}
+
+function canUse(stock, sol){
+  if((stock["510"]||0)<sol.n510) return false;
+  for(const k in sol.names) if((stock[k]||0)<sol.names[k]) return false;
+  return true;
+}
+
+function consume(stock, sol){
+  stock["510"]-=sol.n510;
+  for(const k in sol.names) stock[k]-=sol.names[k];
+}
+
+function findBestForPost(target,tolerance,stock,bigorneMode){
+  const combos=comboListForStock(stock);
   let best=null;
-  const max510=Math.min(stock["510"]||0,Math.floor(target/510));
+  const max510=Math.min(stock["510"]||0, Math.floor(target/510));
+
+  // Recherche atelier: on essaie les 510 max, puis on descend si nécessaire.
   for(let n510=max510;n510>=0;n510--){
     const base=n510*510;
+    const minRemain=target-tolerance-base;
+    const maxRemain=target-base;
+
     for(const c of combos){
-      if(!respectsBigorne(c.list,bigorneMode)) continue;
-      const total=base+c.sum, diff=target-total;
+      if(c.sum<minRemain) continue;
+      if(c.sum>maxRemain) break;
+      if(!respectsBigorneCombo(c,bigorneMode)) continue;
+
+      const total=base+c.sum;
+      const diff=target-total;
       if(diff<0||diff>tolerance) continue;
-      const bigCount=c.list.filter(p=>p.big).length;
+
+      const bigCount=c.g+c.d;
       const avoidPenalty=bigorneMode==="avoid"?bigCount*5000:0;
-      const score=diff*100000-n510*1000+c.list.length*10+avoidPenalty;
-      const sol={score,total,diff,n510,list:c.list.slice(),mode:bigorneMode};
+      const score=diff*100000 - n510*1000 + c.count*10 + avoidPenalty;
+
+      const sol={score,total,diff,n510,list:c.list.slice(),names:Object.assign({},c.names),g:c.g,d:c.d,mode:bigorneMode};
       if(!canUse(stock,sol)) continue;
       if(best===null||score<best.score) best=sol;
     }
+
+    // Si on a trouvé avec ce nombre de 510, inutile de trop descendre sauf si écart énorme.
+    // La pondération garde déjà la meilleure, mais ça accélère les cas simples.
+    if(best && best.n510===n510 && best.diff===0) break;
   }
   return best;
 }
+
 function formatComp(sol){
   const parts=[];
   if(sol.n510>0) parts.push(sol.n510+" × 510");
   if(sol.list.length>0) parts.push(sol.list.map(p=>p.name).join(" + "));
   return parts.join(" + ");
 }
+
 function modeLabel(m){
   return {none:"aucune contrainte",left:"75G imposée",right:"75D imposée",both:"75G + 75D imposées",avoid:"bigornes évitées si possible"}[m]||m;
 }
+
 function calc(){
+  const t0=performance.now();
   const tool=document.getElementById("tool").value;
   const tolerance=Number(document.getElementById("tol").value);
   const axis=Number(document.getElementById("axisInput").value);
@@ -204,6 +260,7 @@ function calc(){
     {idx:2, requested:Number(document.getElementById("p2").value)||0, gapBefore:Number(document.getElementById("j12").value)||0, mode:document.getElementById("b2").value},
     {idx:3, requested:Number(document.getElementById("p3").value)||0, gapBefore:Number(document.getElementById("j23").value)||0, mode:document.getElementById("b3").value}
   ];
+
   const active=raw.filter(p=>p.requested>0);
   if(active.length===0){out.innerHTML="<span class='warn'>Entre au moins un poste.</span>";return;}
   active[0].gapBefore=0;
@@ -229,13 +286,13 @@ function calc(){
     const deb=cur, fin=deb+p.sol.total;
     cur=fin;
     const diffText=p.sol.diff===0?"exact":"-"+p.sol.diff+" mm";
-    const g=countBig(p.sol.list,"G"), d=countBig(p.sol.list,"D");
+
     rows+="<tr><td>Poste "+p.idx+"</td><td>"+deb.toFixed(1)+"</td><td>"+fin.toFixed(1)+"</td><td>"+p.sol.total+" mm</td></tr>";
     blocks+="<div class='poste'>"+
       "<div class='poste-title'>Poste "+p.idx+" — "+p.sol.total+" mm ("+diffText+")</div>"+
       "<div class='meta'>Demandé : "+p.requested+" mm / Bigorne : "+modeLabel(p.mode)+(p.gapBefore?" / jeu avant : "+p.gapBefore+" mm":"")+"</div>"+
       "<div class='comp'>"+formatComp(p.sol)+"</div>"+
-      "<div class='small'>Bigornes utilisées : 75G × "+g+" / 75D × "+d+"</div>"+
+      "<div class='small'>Bigornes utilisées : 75G × "+p.sol.g+" / 75D × "+p.sol.d+"</div>"+
       "<div class='pos'>"+
         "<div class='box'><div class='boxlabel'>Début poste</div><div class='boxvalue'>"+deb.toFixed(1)+"</div></div>"+
         "<div class='box'><div class='boxlabel'>Fin poste</div><div class='boxvalue'>"+fin.toFixed(1)+"</div></div>"+
@@ -247,10 +304,12 @@ function calc(){
   let stockRest="";
   for(const k of Object.keys(stock).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))) if(stock[k]>0) stockRest+=k+"×"+stock[k]+" ";
 
+  const t1=performance.now();
   out.innerHTML="<div class='big'>Total montage : "+total+" mm</div>"+
     "<div class='meta' style='text-align:center'>Départ gauche montage complet : <b>"+start.toFixed(1)+" mm</b> / fin : <b>"+(start+total).toFixed(1)+" mm</b></div>"+
     blocks+"<h2>Récap positions</h2><table><tr><th>Zone</th><th>Début</th><th>Fin</th><th>Monté</th></tr>"+rows+"</table>"+
-    "<div class='small'>Stock restant : "+stockRest+"</div>";
+    "<div class='small'>Stock restant : "+stockRest+"</div>"+
+    "<div class='small'>Calcul : "+Math.round(t1-t0)+" ms</div>";
 }
 </script>
 </body>
